@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const app = express();
+const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion} = require('mongodb');
 const { request } = require('express');
@@ -20,6 +21,17 @@ async function run() {
     try {
         await client.connect();
         const productCollection = client.db('expertHand').collection('product');
+        
+        //AUTH
+        app.post('/login', (req, res)=>{
+            const user = req.body;
+            const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+                expiresIn: '1d'
+            })
+            res.send(accessToken)
+        })
+        
+        // const itemCollection = client.db('expertHand').collection('item');
 
         app.get('/product', async (req, res) => {
             const query = {};
@@ -54,7 +66,7 @@ async function run() {
         // collection api
         app.get('/products', async (req, res) => {
             const email = req.query.email;
-            const query = {email};
+            const query = {email: email};
             const cursor = productCollection.find(query);
             const myProducts = await cursor.toArray();
             res.send(myProducts)
