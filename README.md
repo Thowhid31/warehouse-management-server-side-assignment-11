@@ -1,18 +1,19 @@
 ﻿# warehouse-management-server-side-Thowhid31
 
 
-#Expert Hand#
+#Expert Hand
 
 Short Description: This is my first Complete website which is full developed by me. As a beginner we first of all known about HTML, then CSS, JS, REACT, MongoDB, NodeJs etc. This website Contains all these feature through development.
 
-###Liks###
+###Liks
 Live Site Link :
+
 Repository Link (Client) : https://github.com/ProgrammingHeroWC4/warehouse-management-client-side-Thowhid31
 Repository Link (Server) : https://github.com/ProgrammingHeroWC4/warehouse-management-server-side-Thowhid31
 
-##Different features and functionality##
+##Different features and functionality
 
-###Features###
+###Features
 * Responsive Navbar,
 * Responsive All site Including home,
 * Footer with Social Links and copyright sign,
@@ -22,7 +23,7 @@ Repository Link (Server) : https://github.com/ProgrammingHeroWC4/warehouse-manag
 * Basic backend functionality; CRUD though MongoDb and NodeJs,
 * And also an error 404 page.
 
-###Functionality###
+###Functionality
 * React,
 * Bootstrap,
 * React Router,
