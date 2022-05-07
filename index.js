@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion} = require('mongodb');
 const { request } = require('express');
+const res = require('express/lib/response');
 const ObjectId = require('mongodb').ObjectId;
 
 
@@ -70,6 +71,38 @@ async function run() {
             const cursor = productCollection.find(query);
             const myProducts = await cursor.toArray();
             res.send(myProducts)
+        });
+
+
+        //delivered products
+        app.put('/delivered/:id', async(req, res) => {
+            const id = req.params.id;
+            const currentQuantity = req.body;
+            const filter = {_id: ObjectId(id)}
+            const option = {upsert: true};
+            const updateDoc = {
+                $set: {
+                    quantity: currentQuantity.quantity - 1
+                }
+            };
+            const newQuantity = await productCollection.updateOne(filter, updateDoc, option)
+            
+            res.send(newQuantity)
+        });
+
+        //add to stock
+        app.put('/addtostock/:id', async(req, res) => {
+            const id = req.params.id;
+            const currentQuantity = req.body;
+            const filter = {_id: ObjectId(id)}
+            const option = {upsert: true};
+            const updateDoc = {
+                $set: {
+                    quantity: currentQuantity.newQuantity
+                }
+            }
+            const newQuantity = await productCollection.updateOne(filter, updateDoc, option)
+            res.send(newQuantity)
         });
 
     }
