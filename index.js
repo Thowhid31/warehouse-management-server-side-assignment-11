@@ -4,7 +4,7 @@ require('dotenv').config();
 const app = express();
 const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion} = require('mongodb');
+const { MongoClient, ServerApiVersion } = require('mongodb');
 const { request } = require('express');
 const res = require('express/lib/response');
 const ObjectId = require('mongodb').ObjectId;
@@ -14,6 +14,22 @@ const ObjectId = require('mongodb').ObjectId;
 app.use(cors());
 app.use(express.json());
 
+function verifyJWT(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(404).send({ message: 'unauthorized access' })
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, decoded) => {
+        if (error) {
+            return res.status(403).send({ message: 'Forbidden Access' })
+        }
+        console.log('decoded', decoded);
+        req.decoded = decoded;
+    })
+    next();
+}
+
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.wcunk.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
@@ -22,17 +38,17 @@ async function run() {
     try {
         await client.connect();
         const productCollection = client.db('expertHand').collection('product');
-        
+
         //AUTH
-        app.post('/login', (req, res)=>{
+        app.post('/login', (req, res) => {
+
             const user = req.body;
             const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-                expiresIn: '1d'
+                expiresIn: '5d'
             })
-            res.send(accessToken)
+            res.send({ accessToken })
         })
-        
-        // const itemCollection = client.db('expertHand').collection('item');
+
 
         app.get('/product', async (req, res) => {
             const query = {};
@@ -43,59 +59,65 @@ async function run() {
         app.get('/product/:id', async (req, res) => {
             const id = req.params.id
                 ;
-            const query = {_id: ObjectId(id)};
+            const query = { _id: ObjectId(id) };
             const product = await productCollection.findOne(query);
             res.send(product)
         })
 
         //POST API
-        app.post('/product', async(req, res) => {
+        app.post('/product', async (req, res) => {
             const newProduct = req.body;
             const result = await productCollection.insertOne(newProduct);
             res.send(result);
         });
 
         //DELETE API
-        app.delete('/product/:id', async(req, res)=>{
+        app.delete('/product/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {_id: ObjectId(id)};
+            const query = { _id: ObjectId(id) };
             const result = await productCollection.deleteOne(query);
             res.send(result);
         })
 
 
         // collection api
-        app.get('/products', async (req, res) => {
+        app.get('/products', verifyJWT, async (req, res) => {
+            const decodedEmail = req.decoded.email;
             const email = req.query.email;
-            const query = {email: email};
-            const cursor = productCollection.find(query);
-            const myProducts = await cursor.toArray();
-            res.send(myProducts)
+            if (email === decodedEmail) {
+                const query = { email: email };
+                const cursor = productCollection.find(query);
+                const myProducts = await cursor.toArray();
+                res.send(myProducts)
+            }
+            else{
+                res.status(403).send({message: 'Forbidden Access'})
+            }
         });
 
 
         //delivered products
-        app.put('/delivered/:id', async(req, res) => {
+        app.put('/delivered/:id', async (req, res) => {
             const id = req.params.id;
             const currentQuantity = req.body;
-            const filter = {_id: ObjectId(id)}
-            const option = {upsert: true};
+            const filter = { _id: ObjectId(id) }
+            const option = { upsert: true };
             const updateDoc = {
                 $set: {
                     quantity: currentQuantity.quantity - 1
                 }
             };
             const newQuantity = await productCollection.updateOne(filter, updateDoc, option)
-            
+
             res.send(newQuantity)
         });
 
         //add to stock
-        app.put('/addtostock/:id', async(req, res) => {
+        app.put('/addtostock/:id', async (req, res) => {
             const id = req.params.id;
             const currentQuantity = req.body;
-            const filter = {_id: ObjectId(id)}
-            const option = {upsert: true};
+            const filter = { _id: ObjectId(id) }
+            const option = { upsert: true };
             const updateDoc = {
                 $set: {
                     quantity: currentQuantity.newQuantity
