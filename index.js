@@ -51,11 +51,22 @@ async function run() {
 
 
         app.get('/product', async (req, res) => {
+            const page = parseInt(req.query.page);
+            const size = parseInt(req.query.size)
             const query = {};
             const cursor = productCollection.find(query);
-            const products = await cursor.toArray();
+            let products;
+            if(page || size){
+
+                products = await cursor.skip(page*size).limit(size).toArray();
+            }
+            else{
+                products = await cursor.toArray();
+            }
+            // const products = await cursor.toArray();
             res.send(products)
         })
+
         app.get('/product/:id', async (req, res) => {
             const id = req.params.id
                 ;
@@ -126,6 +137,15 @@ async function run() {
             const newQuantity = await productCollection.updateOne(filter, updateDoc, option)
             res.send(newQuantity)
         });
+
+
+        //productCount
+        app.get('/productCount', async(req, res)=>{
+            const query = {};
+            const cursor = productCollection.find(query);
+            const count = await cursor.count();
+            res.send({count});
+        })
 
     }
     finally {
