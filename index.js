@@ -63,7 +63,6 @@ async function run() {
             else{
                 products = await cursor.toArray();
             }
-            // const products = await cursor.toArray();
             res.send(products)
         })
 
@@ -93,18 +92,21 @@ async function run() {
 
         // collection api
         app.get('/products', verifyJWT, async (req, res) => {
-            const decodedEmail = req.decoded.email;
-            const email = req.query.email;
+            const decodedEmail = req?.decoded?.email;
+            const email = req?.query?.email;
             if (email === decodedEmail) {
                 const query = { email: email };
                 const cursor = productCollection.find(query);
                 const myProducts = await cursor.toArray();
-                res.send(myProducts)
+                res.send(myProducts);
             }
             else{
                 res.status(403).send({message: 'Forbidden Access'})
             }
         });
+
+        
+
 
 
         //delivered products
@@ -122,6 +124,8 @@ async function run() {
 
             res.send(newQuantity)
         });
+
+
 
         //add to stock
         app.put('/addtostock/:id', async (req, res) => {
